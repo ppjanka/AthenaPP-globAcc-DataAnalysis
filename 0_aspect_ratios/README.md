@@ -22,6 +22,8 @@ Note that the program is outputting all cells into the .csv file, which might be
 
  - resolution.ipynb is a script to investigate how well the local thermal scale height and MRI maximally unstable wavelength are resolved in a given simulation. Note: this script requires a .csv output from aspect_ratios, *as well as* several .pkl output files from diagnostics_steady.ipynb (see ../1stLook_and_processing/). These need to be run beforehand.
 
+ - environment.yml is an Anaconda snapshot of the Python environment to be used with the scripts in this repo.
+
 
 ## Contributing
 

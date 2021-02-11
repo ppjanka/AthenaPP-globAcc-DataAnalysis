@@ -5,11 +5,11 @@ Note: this toolkit has been evolving over time and, unfortunately, I am not able
 
 ## Typical workflow
 
- - IUse scripts in aspect_ratios and 1stLook_and_processing while running a simulation to monitor its progress.
+ - Use scripts in aspect_ratios and 1stLook_and_processing while running a simulation to monitor its progress.
 
  - Extract secondary diagnostics as pkl files with 1stLook_and_processing.
 
- - Extract and plot final diagnostics using final_products. Using pkl files from previous steps allows for quick changes without need for costly data reprocessing.
+ - Extract and plot final diagnostics using final_products and 3D_plots. Using pkl files from previous steps allows for quick changes without need for costly data reprocessing.
 
 ## Contents (separate READMEs inside)
 

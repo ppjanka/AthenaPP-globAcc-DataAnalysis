@@ -5,9 +5,15 @@ Note: this toolkit has been evolving over time and, unfortunately, I am not able
 
 ## Typical workflow
 
-## Contents
+ - IUse scripts in aspect_ratios and 1stLook_and_processing while running a simulation to monitor its progress.
 
- - aspect_ratios/: tools to investigate cell aspect ratios and time step constraints in Athena++ HDF5 output snapshots with MHD data (see a separate README inside).
+ - Extract secondary diagnostics as pkl files with 1stLook_and_processing.
+
+ - Extract and plot final diagnostics using final_products. Using pkl files from previous steps allows for quick changes without need for costly data reprocessing.
+
+## Contents (separate READMEs inside)
+
+ - aspect_ratios/: tools to investigate cell aspect ratios and time step constraints in Athena++ HDF5 output snapshots with MHD data.
 
  - 1stLook_and_processing/: scripts usefull in monitoring runs in progress, as well as extracting secondary diagnostics as pkl binary files. These pkl files can then be used to extract final products for data investigation without the need for costly re-processing of the data when changes are made.
 

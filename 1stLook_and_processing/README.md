@@ -7,6 +7,14 @@ Note: this toolkit has been evolving over time and, unfortunately, I am not able
 
 This folder contains scripts usefull in monitoring runs in progress, as well as extracting secondary diagnostics as pkl binary files. These pkl files can then be used to extract final products for data investigation without the need for costly re-processing of the data when changes are made.
 
+## Typical workflow
+
+ - Run diagnostics_memopt and diagnostics_memopt_tseries while the simulation progresses, in order to make sure that all the basic diagnostics are sensible, and to test whether a steady state is reached. One may also wish to use ../aspect_ratios to make sure that, e.g., the MRI is properly resolved.
+
+ - Once a range in time for time-averaging is known, use diagnostics_steady to extract all the relevant time-averaged and time-dependent data into pkl files.
+
+ - Move to final diagnostic products to investigate (../final_products).
+
 ## Contents
 
  - environment.yml: an Anaconda snapshot of the Python environment to be used with the scripts in this repo.
@@ -108,10 +116,6 @@ This folder contains scripts usefull in monitoring runs in progress, as well as 
      - 'csound': 3D time-average of sound speed,
      - 'bfield': 3D time-average of magnetic field,
      - 'vertical': calculate vertical profiles (uses 3D data for transformation to cylindrical coordinates).
-
- - aspect_ratios/: tools to investigate cell aspect ratios and time step constraints in Athena++ HDF5 output snapshots with MHD data (see a separate README inside).
-
- - resolution.ipynb: a script to investigate how well the local thermal scale height and MRI maximally unstable wavelength is resolved in a given simulation. Note: this script requires a .csv output from aspect_ratios, as well as several .pkl output files from diagnostics_steady.ipynb. These need to be run beforehand.
 
  - athena_read.py: a script from [Athena++](https://github.com/PrincetonUniversity/athena-public-version) handling read-in of the simulations' .athdf (hdf5) outputs.
 

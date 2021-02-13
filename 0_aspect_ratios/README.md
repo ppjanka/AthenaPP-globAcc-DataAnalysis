@@ -18,7 +18,7 @@ make aspect_ratios
 
 Note that the program is outputting all cells into the .csv file, which might be space-consuming. If inspecting large snapshots, one might wish to edit the aspect_ratios.cpp to only output specific cells (e.g., based on time step constraints).
 
- - Use the Jupyter notebook aspect_ratios.ipynb to view the data (requires Python3 with jupyter, numpy, and pandas installed, see environment.yml file in the root folder).
+ - Use the Jupyter notebook aspect_ratios.ipynb to view the data (requires Python3 with jupyter, numpy, and pandas installed, see environment.yml).
 
  - resolution.ipynb is a script to investigate how well the local thermal scale height and MRI maximally unstable wavelength are resolved in a given simulation. Note: this script requires a .csv output from aspect_ratios, *as well as* several .pkl output files from diagnostics_steady.ipynb (see ../1stLook_and_processing/). These need to be run beforehand.
 

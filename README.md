@@ -13,9 +13,9 @@ Note: this toolkit has been evolving over time and, unfortunately, I am not able
 
 ## Contents (separate READMEs inside)
 
- - aspect_ratios/: tools to investigate cell aspect ratios and time step constraints in Athena++ HDF5 output snapshots with MHD data.
+ - 0_aspect_ratios/: tools to investigate cell aspect ratios and time step constraints in Athena++ HDF5 output snapshots with MHD data.
 
- - 1stLook_and_processing/: scripts usefull in monitoring runs in progress, as well as extracting secondary diagnostics as pkl binary files. These pkl files can then be used to extract final products for data investigation without the need for costly re-processing of the data when changes are made.
+ - 1_1stLook_and_processing/: scripts usefull in monitoring runs in progress, as well as extracting secondary diagnostics as pkl binary files. These pkl files can then be used to extract final products for data investigation without the need for costly re-processing of the data when changes are made.
 
  - 2_final_products/: in-depth analysis of the results. Includes commands to generate plots in Pjanka & Stone (2020).
 

@@ -17,6 +17,10 @@ Note: this toolkit has been evolving over time and, unfortunately, I am not able
 
  - 1stLook_and_processing/: scripts usefull in monitoring runs in progress, as well as extracting secondary diagnostics as pkl binary files. These pkl files can then be used to extract final products for data investigation without the need for costly re-processing of the data when changes are made.
 
+ - 2_final_products/: in-depth analysis of the results. Includes commands to generate plots in Pjanka & Stone (2020).
+
+ - 3_3D_plots/: mayavi scripts to generate 3D renderings of simulation data, see Fig. 1 of Pjanka & Stone (2020). Uses [MayAvi](https://docs.enthought.com/mayavi/mayavi/).
+
 ## Contributing
 
 Written by Patryk Pjanka to aid design and implementation of global accretion disk simulations (e.g., Pjanka & Stone 2020). Contains elements of [Athena++](https://github.com/PrincetonUniversity/athena-public-version) to aid read-in of the simulations' .athdf (hdf5) outputs.

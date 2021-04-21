@@ -9,6 +9,39 @@ exec(open("./diagnostics_header.py").read())
 
 def identity (x):
     return x
+def SQR (x):
+    return x*x
+
+# Account for frame rotation around the barycenter and move the velocities to a proper inertial frame.
+#  - NOTE: This will give fully inertial velocities relative to the system's barycenter(!). If you instead wish to obtain frame-rotation-subtracted velocities relative to the coordinate center (M1), simply perform vel3 += omega*r.
+#  - NOTE: make sure that this matches your implementation!
+def inertial_frame (GM, omega, r, theta, phi, vel1, vel2, vel3):
+
+    # transform to cylindrical coordinates
+    r_cyl = r * np.sin(theta)
+    # move to the barycenter system of coordinates
+    r_bary = np.sqrt(SQR(r_cyl) + SQR(1.-GM) - 2.*r_cyl*(1.-GM)*np.cos(phi))
+    phi_bary = np.arcsin(r_cyl*np.sin(phi)/r_bary)
+    phi_bary = np.where(r_cyl*np.cos(phi) < (1.-GM), np.pi - phi_bary, phi_bary)
+    # useful angle for coordinate transformations
+    sin_alpha = np.sin(phi - phi_bary + 0.5*np.pi)
+    cos_alpha = np.cos(phi - phi_bary + 0.5*np.pi)
+    
+    # frame rotation around the barycenter
+    Mphi_bary = omega * r_bary
+
+    # move back to the LAB coordinates
+    dMr = Mphi_bary * cos_alpha
+    dMphi = Mphi_bary * sin_alpha
+    
+    #update momenta
+    res_vel1 = vel1 + dMr * np.sin(theta)
+    res_vel2 = vel2 + dMr * np.cos(theta)
+    res_vel3 = vel3 + dMphi
+    
+    return res_vel1, res_vel2, res_vel3
+
+#-------------------------------------------------------------------------
 
 class Vars ():
 
@@ -22,7 +55,7 @@ class Vars ():
         # e.g., division for PlasmaBeta
         return quantity
 
-# for rho, press, vel1, etc., already in the file
+# for rho, press, vel1, etc., already in the athdf file
 class Default(Vars):
 
     def __init__(self, var):
@@ -39,6 +72,20 @@ class Default(Vars):
 
     def quantity (self,data):
         return self.process(data[self.var])
+
+# azimuthal velocity with frame rotation and Keplerian motion subtracted
+class Vel3Fluct(Vars):
+
+    def __init__ (self, GM=GM, omega=frame_omega):
+        super().__init__()
+        self.quantities = ['vel3',]
+        self.label = 'vel3-fluct'
+        self.GM = GM
+        self.omega = omega
+
+    def quantity (self, data):
+        _, _, r = np.meshgrid(data['x3v'], data['x2v'], data['x1v'], indexing='ij')
+        return data['vel3'] + self.omega*r - np.sqrt(self.GM / r)
 
 class Bfield(Vars):
 
@@ -321,4 +368,117 @@ class MRIstability(Csound):
         _, _, r = np.meshgrid(data['x3v'], data['x2v'], data['x1v'], indexing='ij')
         r.shape = data['rho'].shape # needed for slices
         result = super().csound(data, adiab_idx)*np.sqrt( (15./(4.*np.pi)) * data['rho'] / (data['Bcc1']**2 + data['Bcc2']**2 + data['Bcc3']**2))
+        return result
+
+class KinHelicity (Vars):
+
+    def __init__(self, GM=None, omega=None):
+        super().__init__()
+        self.quantities = ['vel1', 'vel2', 'vel3']
+        self.label = 'KinHelicity'
+        # central object mass (assumed G(M1+M2) = 1.0, and frame rotation speed)
+        self.GM = GM
+        self.omega = omega
+
+    def quantity (self, data):
+
+        from scipy.ndimage.filters import convolve
+
+        r, theta, phi = data['x1v'], data['x2v'], data['x3v']
+
+        if len(r) == 1 or len(theta) == 1 or len(phi) == 1:
+            print("Calculation of helicity requires 3D data structure. Aborting.")
+            return [None, None, None, None]
+
+        rm, tm, pm = np.meshgrid(r, theta, phi, indexing='ij')
+        dr = r[1:] - r[:-1]
+        dtheta = theta[1:] - theta[:-1]
+        dphi = phi[1:] - phi[:-1]
+        drm, dtm, dpm = np.meshgrid(dr, dtheta, dphi, indexing='ij')
+        ravg = 0.5 * (r[1:] + r[:-1])
+        tavg = 0.5 * (theta[1:] + theta[:-1])
+        pavg = 0.5 * (phi[1:] + phi[:-1])
+        ravgm, tavgm, pavgm = np.meshgrid(ravg, tavg, pavg, indexing='ij')
+        dV = ravgm**2 * np.sin(tavgm) * drm*dtm*dpm
+        del drm, dtm, dpm
+
+        vel1, vel2, vel3 = data['vel1'], data['vel2'], data['vel3']
+        # ensure indices order [r, theta, phi]
+        vel1 = np.transpose(vel1, (2,1,0))
+        vel2 = np.transpose(vel2, (2,1,0))
+        vel3 = np.transpose(vel3, (2,1,0))
+        # account for frame rotation
+        #vel1, vel2, vel3 = inertial_frame(self.GM, self.omega, rm, tm, pm, vel1, vel2, vel3)
+        vel3 += self.omega * rm
+        # average to match dimensions (n-1,n-1,n-1)
+        vel1avg = convolve(vel1, np.ones([2,2,2]) * (0.5**3), mode='constant', cval=np.nan)[:-1,:-1,:-1]
+        vel2avg = convolve(vel2, np.ones([2,2,2]) * (0.5**3), mode='constant', cval=np.nan)[:-1,:-1,:-1]
+        vel3avg = convolve(vel3, np.ones([2,2,2]) * (0.5**3), mode='constant', cval=np.nan)[:-1,:-1,:-1]
+
+        # -------------------------------------------------
+
+        # nabla x vel
+
+        # - component r
+        vphi_sint = vel3 * np.sin(tm)
+        dtheta_vphi_sint = (vphi_sint[:,1:,:] - vphi_sint[:,:-1,:]) / (np.tile(dtheta, [len(r), len(phi),1]).transpose(0,2,1))
+        # average to match dimensions (n-1,n-1,n-1)
+        dtheta_vphi_sint = 0.5 * (dtheta_vphi_sint[:,:,1:] + dtheta_vphi_sint[:,:,:-1])
+        dtheta_vphi_sint = 0.5 * (dtheta_vphi_sint[1:,:,:] + dtheta_vphi_sint[:-1,:,:])
+        del vphi_sint
+
+        dphi_vtheta = (vel2[:,:,1:] - vel2[:,:,:-1]) / np.tile(dphi, [len(r), len(theta),1])
+        # average to match dimensions (n-1,n-1,n-1)
+        dphi_vtheta = 0.5 * (dphi_vtheta[:,1:,:] + dphi_vtheta[:,:-1,:])
+        dphi_vtheta = 0.5 * (dphi_vtheta[1:,:,:] + dphi_vtheta[:-1,:,:])
+
+        nabxvel_r = (1./(ravgm * np.sin(tavgm))) * (dtheta_vphi_sint - dphi_vtheta)
+        del dtheta_vphi_sint, dphi_vtheta
+
+        # - component theta
+        dphi_vr = (vel1[:,:,1:] - vel1[:,:,:-1]) / np.tile(dphi, [len(r), len(theta),1])
+        # average to match dimensions (n-1,n-1,n-1)
+        dphi_vr = 0.5 * (dphi_vr[:,1:,:] + dphi_vr[:,:-1,:])
+        dphi_vr = 0.5 * (dphi_vr[1:,:,:] + dphi_vr[:-1,:,:])
+
+        rvphi = rm * vel3
+        dr_rvphi = (rvphi[1:,:,:] - rvphi[:-1,:,:]) / np.tile(dr, [len(theta), len(phi),1]).transpose(2,0,1)
+        # average to match dimensions (n-1,n-1,n-1)
+        dr_rvphi = 0.5 * (dr_rvphi[:,1:,:] + dr_rvphi[:,:-1,:])
+        dr_rvphi = 0.5 * (dr_rvphi[:,:,1:] + dr_rvphi[:,:,:-1])
+        del rvphi
+
+        nabxvel_t = (1./ravgm) * ((1./np.sin(tavgm)) * dphi_vr - dr_rvphi)
+        del dphi_vr, dr_rvphi
+
+        # - component phi
+        rvtheta = rm * vel2
+        dr_rvtheta = (rvtheta[1:,:,:] - rvtheta[:-1,:,:]) / np.tile(dr, [len(theta), len(phi),1]).transpose(2,0,1)
+        # average to match dimensions (n-1,n-1,n-1)
+        dr_rvtheta = 0.5 * (dr_rvtheta[:,1:,:] + dr_rvtheta[:,:-1,:])
+        dr_rvtheta = 0.5 * (dr_rvtheta[:,:,1:] + dr_rvtheta[:,:,:-1])
+        del rvtheta
+
+        dtheta_vr = (vel1[:,1:,:] - vel1[:,:-1,:]) / (np.tile(dtheta, [len(r), len(phi),1]).transpose(0,2,1))
+        # average to match dimensions (n-1,n-1,n-1)
+        dtheta_vr = 0.5 * (dtheta_vr[:,:,1:] + dtheta_vr[:,:,:-1])
+        dtheta_vr = 0.5 * (dtheta_vr[1:,:,:] + dtheta_vr[:-1,:,:])
+
+        nabxvel_p = (1./ravgm) * (dr_rvtheta - dtheta_vr)
+        del dr_rvtheta, dtheta_vr
+
+        #vorticity = np.array([nabxvel_r, nabxvel_t, nabxvel_p])
+
+        # --------------------------------
+        # calculate kinetic helicity density
+
+        helicity_dV = (vel1avg * nabxvel_r + vel2avg * nabxvel_t + vel3avg * nabxvel_p) # / dV
+
+        # --------------------------------
+
+        # transpose to (phi, theta, r, quantity)
+        result = np.array([nabxvel_r, nabxvel_t, nabxvel_p, helicity_dV])
+        result = result.transpose(3,2,1,0)
+        
+        # save both vorticity and helicity density
         return result

@@ -102,7 +102,7 @@ class Full3D (Ops):
         self.r = []; self.theta = []; self.phi = []; self.val = []
         self.time = None
 
-    def read (self, filename):
+    def read (self, filename, transpose=False):
         # turn filename to list if not list (for averaging)
         if isinstance(filename, str):
             filenames = [filename,]
@@ -126,7 +126,9 @@ class Full3D (Ops):
                 self.val += np.array(self.vars_object.post_profile(self.vars_object.quantity(self.data)))
             del self.data # free memory
             counter += 1
-        self.val = (np.array(self.val) / counter).transpose()
+        self.val = (np.array(self.val) / counter)
+        if transpose:
+            self.val = self.val.transpose()
         self.data = {'phi':self.phi, 'r':self.r, 'theta':self.theta, 'val':self.val}
 
 
@@ -1255,8 +1257,18 @@ class ButterflyDiagram (Ops):
                 val = np.mean(val, axis=0)
             elif self.type == 'sum':
                 val = np.sum(val, axis=0)
+            elif self.type == 'rms':
+                val = np.sqrt(np.mean(val*val, axis=0))
 
-        val_fun = RGI(points=(self.data['x2v'], self.data['x1v']), \
+        # patch for differential quantities
+        rr = self.data['x1v']
+        tt = self.data['x2v']
+        if val.shape[0] == len(tt)-1:
+            tt = 0.5*(tt[1:]+tt[:-1])
+        if val.shape[1] == len(rr)-1:
+            rr = 0.5*(rr[1:]+rr[:-1])
+
+        val_fun = RGI(points=(tt,rr), \
             values=val, method='linear', bounds_error=False) # val(theta,r)
         for r in self.radii:
             points = np.array(cyl2sph(r, self.z_over_r * r)).transpose()

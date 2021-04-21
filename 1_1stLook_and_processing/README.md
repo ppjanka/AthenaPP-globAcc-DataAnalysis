@@ -46,7 +46,7 @@ This folder contains scripts usefull in monitoring runs in progress, as well as 
       - ScaleHeight: local thermal scale height,
       - PlasmaBeta,
       - MRIstability: local thermal scale height divided by maximally unstable MRI wavelength,
-      - KinHelicity: vorticity (\nabla\times\vec{u}) components, and the kinetic helicity density (\vec{u}\cdot(\nabla\times\vec{u})).
+      - KinHelicity: vorticity ($\nabla\times\vec{u}$) components, and the kinetic helicity density ($\vec{u}\cdot(\nabla\times\vec{u})$).
 
    - "ops" classes define various types of slices, averages, and time series, that are useful when analysing the data. 
    Each class contains at least the following methods:

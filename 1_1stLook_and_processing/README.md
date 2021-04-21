@@ -30,6 +30,7 @@ This folder contains scripts usefull in monitoring runs in progress, as well as 
 
    The classes included are:
       - Default: simply returns one of the build-in outputs from .athdf file (e.g., rho, press, etc.),
+      - Vel3Fluct: extracts the fluctuating part of the velocity field (frame rotation and Keplerian motion subtracted),
       - Bfield: magnetic field amplitude in code units,
       - Bi_over_Bj: a ratio of two components of magnetic field,
       - PressMag: magnetic pressure,
@@ -44,7 +45,8 @@ This folder contains scripts usefull in monitoring runs in progress, as well as 
       - Csound: sound speed,
       - ScaleHeight: local thermal scale height,
       - PlasmaBeta,
-      - MRIstability: local thermal scale height divided by maximally unstable MRI wavelength.
+      - MRIstability: local thermal scale height divided by maximally unstable MRI wavelength,
+      - KinHelicity: vorticity ($\nabla\times\vec{u}$) components, and the kinetic helicity density ($\vec{u}\cdot(\nabla\times\vec{u})$).
 
    - "ops" classes define various types of slices, averages, and time series, that are useful when analysing the data. 
    Each class contains at least the following methods:

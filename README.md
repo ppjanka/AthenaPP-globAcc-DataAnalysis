@@ -1,5 +1,5 @@
 
-This is a set of Python diagnostics to be used with Athena++ simulations, particularly suited for global accretion disk models (see, e.g., Pjanka & Stone 2020). Generally intended for use with MHD simulations in spherical-polar coordinates with AMR and HDF5 output.
+This is a set of Python data extraction and analysis tools to be used with Athena++ MHD (CFD) simulations, particularly suited for global accretion disk models (see, e.g., Pjanka & Stone 2020). Generally intended for use with MHD simulations in spherical-polar coordinates with AMR and HDF5 output.
 
 Note: this toolkit has been evolving over time and, unfortunately, I am not able to test all the pathways for correctness over time. Thus, *please* make sure to check that the results you obtain are sensible and self-consistent, and that no debugging is needed. (This is perhaps a good general advice as well ;)
 
